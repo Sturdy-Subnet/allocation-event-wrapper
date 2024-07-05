@@ -19,6 +19,6 @@ npm install
 npx hardhat compile
 # run tests
 npx hardhat test
-# deploy
-npx hardhat run scripts/deploy.ts
+# run example
+npx hardhat run scripts/example.ts
 ```
