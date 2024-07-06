@@ -21,9 +21,8 @@ interface Allocations extends Object {
 
 async function main() {
   dotenv.config();
-  // const allocateHost = process.env.ALLOCATE_HOST;
   const apiKey = process.env.STURDY_VALI_API_KEY;
-  const url = `http://127.0.0.1:9040/allocate`;
+  const url = process.env.HOST_URL;
 
   const data = {
     request_type: 0,
@@ -78,9 +77,11 @@ async function main() {
 
   console.log("allocations:", JSON.stringify(allocs));
 
-  const allocations = Object.values(allocs.allocations).map((poolData) =>
-    Object.values(poolData.allocations).map((amount) => amount.toString())
-  );
+  const allocations = Object.values(allocs.allocations)
+    .sort((a, b) => b.apy - a.apy) // Sort by APY in descending order
+    .map((poolData) =>
+      Object.values(poolData.allocations).map((amount) => amount.toString())
+    );
 
   console.log("allocations array: ", allocations);
 
