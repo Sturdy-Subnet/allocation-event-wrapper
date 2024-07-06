@@ -21,8 +21,8 @@ interface Allocations extends Object {
 
 async function main() {
   dotenv.config();
-  const apiKey = process.env.STURDY_VALI_API_KEY;
-  const url = process.env.HOST_URL;
+  const apiKey = process.env.STURDY_VALI_API_KEY || "";
+  const url = process.env.HOST_URL || "";
 
   const data = {
     request_type: 0,
