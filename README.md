@@ -25,6 +25,8 @@ npx hardhat test
 npx hardhat run scripts/example.ts
 # run sturdy silo example
 npx hardhat run scripts/TestSturdyAllocator.ts
+# deploy SturdyAllocator.sol
+npx hardhat run scripts/DeploySturdyAllocator.ts
 ```
 
 [SturdyAllocator.ts](scripts/SturdyAllocator.ts) contains a function which calls the chain given some parameters. It is up to the reader to define them (see [TestSturdyAllocator.ts](scripts/TestSturdyAllocator.ts) for an example on how this may be done).
