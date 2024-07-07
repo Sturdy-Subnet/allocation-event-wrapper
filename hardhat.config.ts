@@ -24,13 +24,43 @@ task("accounts", "Prints the list of accounts", async (taskArgs, hre) => {
 // Go to https://hardhat.org/config/ to learn more
 
 const config: HardhatUserConfig = {
-  solidity: "0.8.4",
+  solidity: {
+    version: "0.8.21",
+    settings: {
+      optimizer: {
+        enabled: true,
+        runs: 200,
+      },
+    },
+  },
   networks: {
     hardhat: {
       forking: {
         enabled: true,
-        url: process.env.MAINNET_FORKING_URL || "",
+        url: process.env.MAINNET_URL || "",
         blockNumber: 20233401,
+      },
+      initialBaseFeePerGas: 109851462,
+      accounts: {
+        mnemonic:
+          process.env.MNEMONIC ||
+          "test test test test test test test test test test test junk",
+      },
+    },
+    localhost: {
+      url: "http://127.0.0.1:8545",
+      accounts: {
+        mnemonic:
+          process.env.MNEMONIC ||
+          "test test test test test test test test test test test junk",
+      },
+    },
+    mainnet: {
+      url: process.env.MAINNET_URL || "",
+      accounts: {
+        mnemonic:
+          process.env.MNEMONIC ||
+          "test test test test test test test test test test test junk",
       },
     },
   },
@@ -40,6 +70,9 @@ const config: HardhatUserConfig = {
   },
   etherscan: {
     apiKey: process.env.ETHERSCAN_API_KEY,
+  },
+  tracer: {
+    tasks: ["run"],
   },
 };
 
