@@ -19,18 +19,6 @@ interface Allocations extends Object {
   };
 }
 
-async function main() {
-  const provider = new ethers.providers.JsonRpcProvider(
-    "http://127.0.0.1:8545"
-  );
-
-  await provider.send("hardhat_impersonateAccount", [
-    process.env.DEBT_MANAGER_OWNER || "",
-  ]);
-  const acct = provider.getSigner(process.env.DEBT_MANAGER_OWNER || "");
-  await run(acct);
-}
-
 export async function run(acct: Signer) {
   dotenv.config();
   const apiKey = process.env.STURDY_VALI_API_KEY || "";
@@ -40,7 +28,7 @@ export async function run(acct: Signer) {
     request_type: 0,
     user_address: "0xD8f9475A4A1A6812212FD62e80413d496038A89A",
     assets_and_pools: {
-      total_assets: 1000000000000000000,
+      total_assets: 4070000000000000000000,
       pools: {
         "Sturdy Interest Bearing crvUSD": {
           pool_type: 2,
@@ -120,24 +108,19 @@ export async function run(acct: Signer) {
     .connect(acct)
     .setManualAllocator(process.env.STURDY_ALLOCATOR || "");
 
-  const allocateTx = await allocator
-    .connect(acct)
-    .allocate(
-      "saCrvUSD",
-      69,
-      ethers.utils.getAddress(userAddress),
-      ethers.utils.getAddress(process.env.DEBT_MANAGER || ""),
-      allocatedPools,
-      allocationAmounts,
-      { gasLimit: 3000000 }
-    );
+  const allocateTx = await allocator.connect(acct).allocate(
+    "saCrvUSD",
+    69,
+    ethers.utils.getAddress(userAddress),
+    ethers.utils.getAddress(process.env.DEBT_MANAGER || ""),
+    allocatedPools,
+    allocationAmounts.map((amount) =>
+      ethers.BigNumber.from(
+        Number(amount).toLocaleString("fullwide", { useGrouping: false })
+      )
+    ),
+    { gasLimit: 3000000 }
+  );
 
   console.log(allocateTx);
 }
-
-// We recommend this pattern to be able to use async/await everywhere
-// and properly handle errors.
-main().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
-});

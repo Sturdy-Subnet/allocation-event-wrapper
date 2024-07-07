@@ -2,7 +2,7 @@
 import { run } from "./SturdyAllocator";
 import { ethers } from "hardhat";
 
-async function main() {
+async function test() {
   const provider = new ethers.providers.JsonRpcProvider(
     "http://127.0.0.1:8545"
   );
@@ -14,7 +14,7 @@ async function main() {
   await run(acct);
 }
 
-main().catch((error) => {
+test().catch((error) => {
   console.error(error);
   process.exitCode = 1;
 });

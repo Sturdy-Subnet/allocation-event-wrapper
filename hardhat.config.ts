@@ -38,7 +38,7 @@ const config: HardhatUserConfig = {
       forking: {
         enabled: true,
         url: process.env.MAINNET_URL || "",
-        blockNumber: 20233401,
+        blockNumber: 19021523,
       },
       initialBaseFeePerGas: 109851462,
       accounts: {
@@ -47,7 +47,7 @@ const config: HardhatUserConfig = {
           "test test test test test test test test test test test junk",
       },
     },
-    localhost: {
+    local: {
       url: "http://127.0.0.1:8545",
       accounts: {
         mnemonic:
