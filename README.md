@@ -4,8 +4,8 @@ This repository houses a wrapper which can used to execute rebalances across poo
 
 ```solidity
 event AllocationEvent(
-    string allocationUid,
-    uint256 minerUid,
+    bytes32 indexed allocationUid,
+    uint256 indexed minerUid,
     address indexed userAddress,
     address[] allocatedPools,
     uint256[] allocationAmounts

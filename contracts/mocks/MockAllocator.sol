@@ -5,7 +5,7 @@ import {AllocationLogger} from "../AllocationLogger.sol";
 
 contract MockAllocator {
     function allocate(
-        string memory allocationUid,
+        bytes32 allocationUid,
         uint256 minerUid,
         address userAddress,
         address[] memory allocatedPools,

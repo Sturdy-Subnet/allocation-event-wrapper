@@ -4,15 +4,19 @@
 // When running the script with `npx hardhat run <script>` you'll find the Hardhat
 // Runtime Environment's members available in the global scope.
 import { ethers } from "hardhat";
-import { BigNumberish, Signer } from "ethers";
+import { BigNumberish, Overrides, Signer } from "ethers";
 import dotenv from "dotenv";
 dotenv.config();
 
 export async function run(
   acct: Signer,
+  allocationUid: string,
+  minerUid: BigNumberish,
   userAddress: string,
+  debtManagerAddress: string,
   allocatedPools: string[],
-  allocationAmounts: BigNumberish[]
+  allocationAmounts: BigNumberish[],
+  overrides: Overrides
 ) {
   const allocator = await ethers.getContractAt(
     "SturdyAllocator",
@@ -22,13 +26,13 @@ export async function run(
   const allocateTx = await allocator
     .connect(acct)
     .allocate(
-      "saCrvUSD",
-      69,
+      ethers.utils.toUtf8Bytes(allocationUid),
+      minerUid,
       ethers.utils.getAddress(userAddress),
-      ethers.utils.getAddress(process.env.DEBT_MANAGER || ""),
+      ethers.utils.getAddress(debtManagerAddress),
       allocatedPools,
       allocationAmounts,
-      { gasLimit: 3000000 }
+      overrides
     );
 
   console.log(allocateTx);

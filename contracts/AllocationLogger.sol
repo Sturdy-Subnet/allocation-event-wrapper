@@ -3,8 +3,8 @@ pragma solidity ^0.8.0;
 
 library AllocationLogger {
     event AllocationEvent(
-        string allocationUid,
-        uint256 minerUid,
+        bytes32 indexed allocationUid,
+        uint256 indexed minerUid,
         address indexed userAddress,
         address[] allocatedPools,
         uint256[] allocationAmounts
@@ -12,7 +12,7 @@ library AllocationLogger {
     error MismatchedArrays();
 
     function logAllocation(
-        string memory allocationUid,
+        bytes32 allocationUid,
         uint256 minerUid,
         address userAddress,
         address[] memory allocatedPools,

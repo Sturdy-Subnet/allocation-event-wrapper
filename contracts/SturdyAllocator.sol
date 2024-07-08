@@ -7,7 +7,7 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 contract SturdyAllocator is Ownable {
     function allocate(
-        string memory allocationUid,
+        bytes32 allocationUid,
         uint256 minerUid,
         address userAddress,
         address debtManager,
