@@ -29,4 +29,4 @@ npx hardhat run scripts/TestSturdyAllocator.ts
 npx hardhat run scripts/DeploySturdyAllocator.ts
 ```
 
-[SturdyAllocator.ts](scripts/SturdyAllocator.ts) contains a function which calls the chain given some parameters. It is up to the reader to define them (see [TestSturdyAllocator.ts](scripts/TestSturdyAllocator.ts) for an example on how this may be done).
+[SturdyAllocator.ts](scripts/SturdyAllocator.ts) contains a function which rebalances a Sturdy Finance Aggregator given some parameters. It is up to the reader to define them (see [TestSturdyAllocator.ts](scripts/TestSturdyAllocator.ts) for an example on how this may be done).
