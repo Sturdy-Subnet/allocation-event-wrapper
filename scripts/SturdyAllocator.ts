@@ -35,5 +35,6 @@ export async function run(
       overrides
     );
 
+  console.log("sent transaction!:")
   console.log(allocateTx);
 }

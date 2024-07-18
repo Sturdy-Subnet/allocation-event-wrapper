@@ -41,11 +41,17 @@ const config: HardhatUserConfig = {
         blockNumber: 19021523,
       },
       initialBaseFeePerGas: 109851462,
-      accounts: {
-        mnemonic:
-          process.env.MNEMONIC ||
-          "test test test test test test test test test test test junk",
-      },
+      accounts: [
+        {
+          privateKey: process.env.PRIVATE_KEY?.toString() || "",
+          balance: "100000000000000000000000"
+        }
+      ]
+      // accounts: {
+      //   mnemonic:
+      //     process.env.MNEMONIC ||
+      //     "test test test test test test test test test test test junk",
+      // },
     },
     local: {
       url: "http://127.0.0.1:8545",
@@ -57,11 +63,9 @@ const config: HardhatUserConfig = {
     },
     mainnet: {
       url: process.env.MAINNET_URL || "",
-      accounts: {
-        mnemonic:
-          process.env.MNEMONIC ||
-          "test test test test test test test test test test test junk",
-      },
+      accounts: [
+        process.env.PRIVATE_KEY?.toString() || "",
+      ]
     },
   },
   gasReporter: {
@@ -70,9 +74,6 @@ const config: HardhatUserConfig = {
   },
   etherscan: {
     apiKey: process.env.ETHERSCAN_API_KEY,
-  },
-  tracer: {
-    tasks: ["run"],
   },
 };
 
