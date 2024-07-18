@@ -3,9 +3,9 @@ pragma solidity ^0.8.0;
 
 import {AllocationLogger} from "./AllocationLogger.sol";
 import {IDebtManager} from "./interfaces/IDebtManager.sol";
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
+// import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
-contract SturdyAllocator is Ownable {
+contract SturdyAllocator {
     function allocate(
         bytes32 allocationUid,
         uint256 minerUid,
@@ -18,7 +18,7 @@ contract SturdyAllocator is Ownable {
             revert AllocationLogger.MismatchedArrays();
         }
         // rebalance pools
-        IDebtManager.StrategyAllocation[] memory allocs = new IDebtManager.StrategyAllocation[](4);
+        IDebtManager.StrategyAllocation[] memory allocs = new IDebtManager.StrategyAllocation[](silos.length);
 
         for (uint256 i = 0; i < silos.length; i++) {
             allocs[i] = IDebtManager.StrategyAllocation(silos[i], allocationAmounts[i]);

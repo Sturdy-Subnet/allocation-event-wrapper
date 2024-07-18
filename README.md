@@ -23,14 +23,10 @@ npm install
 npx hardhat compile
 ```
 
-## Tests, and Other Fun Scripts
+## Tests
 ```shell
 # run tests
 npx hardhat test
-# run logging example
-npx hardhat run scripts/example.ts
-# run sturdy silo example (run a local hardhat node with npx hardhat node first)
-npx hardhat run scripts/TestSturdyAllocator.ts --network localhost
 ```
 
 ## Deployment and Usage
