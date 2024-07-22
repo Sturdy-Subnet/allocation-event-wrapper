@@ -2,10 +2,11 @@
 pragma solidity ^0.8.0;
 
 import {AllocationLogger} from "./AllocationLogger.sol";
-import {IDebtManager} from "./interfaces/IDebtManager.sol";
+import {IVault} from "./interfaces/IVault.sol";
+import {IDebtAllocator} from "./interfaces/IDebtAllocator.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
-contract SturdyAllocator is Ownable {
+contract YearnAllocator is Ownable {
     mapping(address => bool) allocators;
 
     constructor() {
@@ -28,34 +29,30 @@ contract SturdyAllocator is Ownable {
     function allocate(
         bytes32 allocationUid,
         uint256 minerUid,
-        address userAddress,
-        address debtManager,
-        address[] memory silos, // NOTE: the silos must be available to the addresses pointed to by  DebtManager(debtManager).vault()
+        address debtAllocatorAddress,
+        address[] memory underlyingPools,
         uint256[] memory allocationAmounts
     ) public onlyAllocator {
-        if (!(silos.length == allocationAmounts.length)) {
+        IDebtAllocator debtAllocator = IDebtAllocator(debtAllocatorAddress);
+        IVault vault = IVault(debtAllocator.vault());
+        address[] memory strategies = vault.get_default_queue();
+
+        if (!(strategies.length == allocationAmounts.length)) {
             revert AllocationLogger.MismatchedArrays();
         }
-        // rebalance pools
-        IDebtManager.StrategyAllocation[]
-            memory allocs = new IDebtManager.StrategyAllocation[](silos.length);
 
-        for (uint256 i = 0; i < silos.length; i++) {
-            allocs[i] = IDebtManager.StrategyAllocation(
-                silos[i],
-                allocationAmounts[i]
-            );
+        // update debt of vaults
+        for (uint256 i = 0; i < strategies.length; i++) {
+            debtAllocator.update_debt(strategies[i], allocationAmounts[i]);
         }
 
-        IDebtManager(debtManager).manualAllocation(allocs);
-
         // Emit the event
-        // AllocationLogger.logAllocation(allocationUid, minerUid, userAddress, silos, allocationAmounts);
+        // AllocationLogger.logAllocation(allocationUid, minerUid, userAddress, strategies, allocationAmounts);
         emit AllocationLogger.AllocationEvent(
             allocationUid,
             minerUid,
-            userAddress,
-            silos,
+            address(vault),
+            underlyingPools,
             allocationAmounts
         );
     }

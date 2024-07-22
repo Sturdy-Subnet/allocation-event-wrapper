@@ -1,12 +1,20 @@
 // eslint-disable-next-line node/no-missing-import
-import { run } from "./SturdyAllocator";
+import { run } from "./YearnAllocator";
 import { ethers } from "hardhat";
 import axios from "axios";
 import dotenv from "dotenv";
 import { BigNumberish } from "ethers";
 import { request } from "http";
+import { IDebtAllocator, IPool, IVault } from "../typechain";
 import { Allocation, Pools, RequestData, SturdySubnetResponse } from "./AllocatorTypes";
-import { IVault } from "../typechain";
+
+/**
+ * contains mappings for pools - by default anything that isn't mapped
+ * it's underlying pool is considered to AAVE pool
+ */
+const underlyingTypesMap = new Map<string, string>([
+  ["0x83F20F44975D03b1b09e64809B757c47f942BEeA", "DAI_SAVINGS"],
+]);
 
 async function runAllocator() {
   console.log("attempting to rebalance vault...")
@@ -17,28 +25,38 @@ async function runAllocator() {
 
   const acct = (await ethers.getSigners())[0]
 
-  const debtManager = await ethers.getContractAt(
-    "DebtManager",
-    process.env.STURDY_DEBT_MANAGER || ""
-  );
+  const debtAllocator: IDebtAllocator = await ethers.getContractAt("IDebtAllocator", process.env.YEARN_DEBT_ALLOCATOR || "") as IDebtAllocator; 
 
-  // connect to aggregator
-  const aggregatorAddress = await debtManager.connect(acct).vault();
-  const aggregator = await ethers.getContractAt("contracts/DebtManager.sol:IVault", aggregatorAddress);
-
+  const vaultAddress: string = await debtAllocator.connect(acct).vault();
+  const vault: IVault = await ethers.getContractAt("contracts/DebtManager.sol:IVault", vaultAddress) as IVault; 
   // obtain parameters needed for sturdy subnet allocation request
-  const totalAssets = await aggregator.connect(acct).totalAssets();
-  // obtain the different silos the aggregator is responsible for
-  const siloAddresses = await debtManager.connect(acct).getStrategies();
+  const totalAssets = await vault.connect(acct).totalAssets();
+  // obtain the different silos the vault is responsible for
+  const strategies: string[] = await vault.connect(acct).get_default_queue();
   const pools: Pools = await (async () => {
-    const entries = await Promise.all(siloAddresses.map(async contractAddress => {
-      const silo: IVault = await ethers.getContractAt("contracts/interfaces/IVault.sol:IERC4626", contractAddress) as IVault;
-      const pool_name = await silo.connect(acct).name();
+    const entries = await Promise.all(strategies.map(async contractAddress => {
+      var tokenAddress = contractAddress
+      const strategy: IVault= await ethers.getContractAt("contracts/interfaces/IVault.sol:IERC4626", contractAddress) as IVault;
+      const pool_name = await strategy.connect(acct).name();
+      // Assumes by default that the underlying pool being allocated to is an aave contract
+      const poolType: string = underlyingTypesMap.get(contractAddress) || "AAVE"
+
+      if (poolType == "AAVE") {
+        const strategyContract = await ethers.getContractAt("IAaveV3Lender", contractAddress)
+        // obtain pool address
+        const poolAddress = await strategyContract.connect(acct).lendingPool();
+        const poolContract: IPool = await ethers.getContractAt("IPool", poolAddress) as IPool;
+        const underlyingAddress = await vault.connect(acct).asset()
+        // obtain atoken address
+        const reserveData = await poolContract.connect(acct).getReserveData(underlyingAddress)
+        tokenAddress = reserveData.aTokenAddress;
+      }
+
       const entry = {
         "pool_model_disc": "CHAIN",
-        "pool_type": "STURDY_SILO",
+        "pool_type": poolType,
         "pool_id": pool_name,
-        "contract_address": contractAddress,
+        "contract_address": tokenAddress,
       };
       return [pool_name, entry];
     }));
@@ -48,15 +66,15 @@ async function runAllocator() {
   // this request will be sent to the sturdy subnet validator API
   const requestData: RequestData = {
     "request_type": "ORGANIC",
-    "user_address": aggregatorAddress,
+    "user_address": vaultAddress,
     "assets_and_pools": {
       "total_assets": totalAssets.toLocaleString(),
-      "pools": pools
+      "pools": pools,
     }
   };
 
   console.log(`sending data`)
-  console.log(requestData)
+  console.log(JSON.stringify(requestData))
 
   const config = {
     headers: {
@@ -101,7 +119,7 @@ async function runAllocator() {
       Number(amount).toLocaleString("fullwide", { useGrouping: false })
     )
   );
-  const userAddress: string = requestData.user_address || "";
+
   const minerUid = parseInt(sortedAllocations[0][1].uid);
 
   console.log("sorted allocations: ", allocationAmounts);
@@ -111,8 +129,7 @@ async function runAllocator() {
     acct,
     requestUuid,
     minerUid,
-    userAddress,
-    process.env.STURDY_DEBT_MANAGER || "",
+    debtAllocator.address,
     allocatedPools,
     allocationAmounts,
     { gasLimit: 3000000 }
