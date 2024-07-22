@@ -36,9 +36,9 @@ npx hardhat run scripts/DeploySturdyAllocator.ts --network mainnet
 # Perform allocations (rebalance selected vault every 24 hours):
 npx hardhat run scripts/RunSturdyAllocator.ts --network mainnet
 # set custom debt manager per script run (can be used to refer to different vaults)
-DEBT_MANAGER="0x3f1...063" npx hardhat run scripts/RunSturdyAllocator.ts --network mainnet
+STURDY_DEBT_MANAGER="0x3f1...063" npx hardhat run scripts/RunSturdyAllocator.ts --network mainnet
 # example - rebalancing crvusd aggregator:
-DEBT_MANAGER=0x3f1e01C07539b9E4941ab58b1258CBB6c4066063 npx hardhat run scripts/RunSturdyAllocator.ts --network mainnet
+STURDY_DEBT_MANAGER=0x3f1e01C07539b9E4941ab58b1258CBB6c4066063 npx hardhat run scripts/RunSturdyAllocator.ts --network mainnet
 ```
 
 [SturdyAllocator.ts](scripts/SturdyAllocator.ts) contains a function which rebalances a Sturdy Finance Aggregator given some parameters. It is up to the reader to define them (see [TestSturdyAllocator.ts](scripts/TestSturdyAllocator.ts) for an example on how this may be done). We provide the allocation script used by sturdy.finance to rebalance their aggregators in [RunSturdyAllocator.ts](./scripts/RunSturdyAllocator.ts).

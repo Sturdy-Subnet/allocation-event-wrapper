@@ -6,8 +6,10 @@
 import { ethers } from "hardhat";
 
 async function main() {
+  const allocatorName: string = process.env.CONTRACT_NAME || ""
+
   const acct = (await ethers.getSigners())[0];
-  const SturdyAllocator = await ethers.getContractFactory("SturdyAllocator");
+  const SturdyAllocator = await ethers.getContractFactory(allocatorName);
   const allocator = await SturdyAllocator.connect(acct).deploy();
   await allocator.deployed();
 

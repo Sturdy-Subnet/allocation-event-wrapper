@@ -38,13 +38,14 @@ const config: HardhatUserConfig = {
       forking: {
         enabled: true,
         url: process.env.MAINNET_URL || "",
-        blockNumber: 19021523,
+        // blockNumber: 19021523,
+        blockNumber: 20359700,
       },
       initialBaseFeePerGas: 109851462,
       accounts: [
         {
           privateKey: process.env.PRIVATE_KEY?.toString() || "",
-          balance: "100000000000000000000000"
+          balance: "1000000000000000000000000"
         }
       ]
       // accounts: {
