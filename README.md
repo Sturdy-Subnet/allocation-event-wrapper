@@ -12,7 +12,7 @@ event AllocationEvent(
 );
 ```
 
-Ensure you set the relevant env variables in a `.env` file before running the following (see [.env.example](.env.example)).
+Ensure you set the relevant env variables in a `.env` file while following along OR before running the following (see [.env.example](.env.example)).
 
 
 ## Setup
@@ -29,10 +29,10 @@ npx hardhat compile
 npx hardhat test
 ```
 
-## Deployment and Usage
+## Sturdy - Deployment and Usage
 ```shell
 # deploy SturdyAllocator.sol
-npx hardhat run scripts/DeploySturdyAllocator.ts --network mainnet
+CONTRACT_NAME=SturdyAllocator npx hardhat run scripts/DeployAllocator.ts --network mainnet
 # Perform allocations (rebalance selected vault every 24 hours):
 npx hardhat run scripts/RunSturdyAllocator.ts --network mainnet
 # set custom debt manager per script run (can be used to refer to different vaults)
@@ -40,5 +40,16 @@ STURDY_DEBT_MANAGER="0x3f1...063" npx hardhat run scripts/RunSturdyAllocator.ts 
 # example - rebalancing crvusd aggregator:
 STURDY_DEBT_MANAGER=0x3f1e01C07539b9E4941ab58b1258CBB6c4066063 npx hardhat run scripts/RunSturdyAllocator.ts --network mainnet
 ```
+
+## Yearn (Example - works on Dai Vault) - Deployment and Usage
+```shell
+# deploy YearnAllocator.sol
+CONTRACT_NAME=YearnAllocator npx hardhat run scripts/DeployAllocator.ts --network mainnet
+# Perform allocations (rebalance selected vault every 24 hours):
+npx hardhat run scripts/RunYearnAllocator.ts --network mainnet
+# set custom debt manager per script run (can be used to refer to different vaults)
+YEARN_DEBT_ALLOCATOR="0x3f1...063" YEARN_DEBT_MANAGER="0x163...ff7" npx hardhat run scripts/RunYearnAllocator.ts --network mainnet
+```
+
 
 [SturdyAllocator.ts](scripts/SturdyAllocator.ts) contains a function which rebalances a Sturdy Finance Aggregator given some parameters. It is up to the reader to define them (see [TestSturdyAllocator.ts](scripts/TestSturdyAllocator.ts) for an example on how this may be done). We provide the allocation script used by sturdy.finance to rebalance their aggregators in [RunSturdyAllocator.ts](./scripts/RunSturdyAllocator.ts).
