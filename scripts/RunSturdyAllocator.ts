@@ -56,7 +56,7 @@ async function runAllocator() {
   };
 
   console.log(`sending data`)
-  console.log(requestData)
+  console.log(JSON.stringify(requestData, null, 2))
 
   const config = {
     headers: {
@@ -91,21 +91,21 @@ async function runAllocator() {
     })
     .sort(([uidA, a], [uidB, b]) => b.apy - a.apy); // Sort by APY in descending order
 
-  const allocatedPools: string[] = Object.values(
-    requestData.assets_and_pools.pools
-  ).map((pool) => ethers.utils.getAddress(pool.contract_address));
-  const allocationAmounts: BigNumberish[] = Object.values(
-    sortedAllocations[0][1].allocations
-  ).map((amount) =>
-    ethers.BigNumber.from(
-      Number(amount).toLocaleString("fullwide", { useGrouping: false })
-    )
-  );
-  const userAddress: string = requestData.user_address || "";
-  const minerUid = parseInt(sortedAllocations[0][1].uid);
-
-  console.log("sorted allocations: ", allocationAmounts);
-  console.log("silo addresses: ", allocatedPools);
+    const poolUids: string[] = Object.keys(sortedAllocations[0][1].allocations)
+    const allocatedPools: string[] = poolUids.map((uid) => ethers.utils.getAddress(requestData.assets_and_pools.pools[uid].contract_address));
+    const allocationAmounts: BigNumberish[] = Object.values(
+      sortedAllocations[0][1].allocations
+    ).map((amount) =>
+      ethers.BigNumber.from(
+        Number(amount).toLocaleString("fullwide", { useGrouping: false })
+      )
+    );
+    const userAddress: string = requestData.user_address || "";
+    const minerUid = parseInt(sortedAllocations[0][1].uid);
+  
+    console.log("sorted allocation amounts: ", JSON.stringify(sortedAllocations, null, 2));
+    console.log("chosen allocation amounts: ", allocationAmounts);
+    console.log("silo addresses: ", allocatedPools);
 
   await run(
     acct,
