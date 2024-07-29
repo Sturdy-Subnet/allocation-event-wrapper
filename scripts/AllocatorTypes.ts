@@ -1,3 +1,4 @@
+/* eslint-disable camelcase */
 import { BigNumberish } from "ethers";
 
 export interface Allocation extends Object {
@@ -32,5 +33,5 @@ export interface RequestData extends Object {
     total_assets: BigNumberish;
     pools: Pools;
     user_address?: string;
-  }
+  };
 }
