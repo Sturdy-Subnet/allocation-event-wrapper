@@ -75,7 +75,35 @@ async function runAllocator() {
     }
   };
 
-  const allocs: SturdySubnetResponse = await sendAllocationRequest();
+  const receivedAllocs: SturdySubnetResponse = await sendAllocationRequest();
+  const poolKeys = Object.keys(receivedAllocs.allocations);
+
+  const allocs: SturdySubnetResponse = {
+    request_uuid: receivedAllocs.request_uuid,
+    allocations: Object.keys(requestData.assets_and_pools.pools).map(
+      (poolUid) => {
+        const retAllocs: Allocation = {
+          uid: 69420,
+          apy: 0.0,
+          allocations: Object.keys(requestData.assets_and_pools.pools).map(
+            function(allocPoolId: string): [string, number] {
+              if (!(allocPoolId in poolKeys)){
+                const retAlloc = 0.0;
+                return [allocPoolId, retAlloc];
+              }
+              return [allocPoolId, receivedAllocs.allocations[minerUid].allocations[allocPoolId]];
+            }
+          ).reduce((acc, [key, value]) => {
+            acc[key] = value;
+            return acc;
+          }, {} as { [key: string]: number })
+        }
+
+        return {[minerUid]: retAllocs};
+      }
+    )
+  }
+
   const requestUuid: string = allocs.request_uuid;
 
   console.log("allocations:", JSON.stringify(allocs));
