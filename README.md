@@ -29,7 +29,7 @@ npx hardhat compile
 npx hardhat test
 ```
 
-## Sturdy - Deployment and Usage
+## Sturdy - Direct API Call - Deployment and Usage
 ```shell
 # deploy SturdyAllocator.sol
 CONTRACT_NAME=SturdyAllocator npx hardhat run scripts/DeployAllocator.ts --network mainnet
@@ -41,7 +41,21 @@ STURDY_DEBT_MANAGER="0x3f1...063" npx hardhat run scripts/RunSturdyAllocator.ts 
 STURDY_DEBT_MANAGER=0x3f1e01C07539b9E4941ab58b1258CBB6c4066063 npx hardhat run scripts/RunSturdyAllocator.ts --network mainnet
 ```
 
-## Yearn (Example - works on Dai Vault) - Deployment and Usage
+## Yearn Airnode-driven allocator (Example - works on Dai Vault) - Deployment and Usage
+```shell
+# deploy YearnAirnodeAllocator.sol
+npx hardhat run scripts/DeployYearnAirnodeAllocator.ts --network mainnet
+# set the allocator as the manager and keeper of a debt allocator of a vault
+# otherwise the allocator script will not be able to apply allocations
+npx hardhat run scripts/YearnUpdateDebtManager.ts --network mainnet
+# run example allocation request script - this example only 
+# works for Yearn's dai vault. NOTE: this script does not 
+# fulfill the request. This needs to be done manually by
+# calling applyAllocation() in the allocator contract
+npx hardhat run scripts/RunYearnAirnodeAllocator.ts --network local
+```
+
+## Yearn Direct API Call (Example - works on Dai Vault) - Deployment and Usage
 ```shell
 # deploy YearnAllocator.sol
 CONTRACT_NAME=YearnAllocator npx hardhat run scripts/DeployAllocator.ts --network mainnet

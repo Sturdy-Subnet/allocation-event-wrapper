@@ -10,26 +10,18 @@ import {SturdySubnetEncoder} from "./SturdySubnetEncoder.sol";
 
 contract YearnAirnodeAllocator is RrpRequesterV0, Ownable {
     using SturdySubnetEncoder for bytes;
-
-    struct Pool {
-        uint8 poolType;
-        bytes32 poolId;
-        address contractAddress;
-    }
-
-    struct Allocation {
-        uint8 apy;
-        bytes32 poolId;
-        address contractAddress;
-    }
-
-    address sponsorWalletAddress;
-    mapping(bytes32 => bool) incomingFulfillments;
+    
+    address public airnodeAddress;
+    address public sponsorWalletAddress;
+    mapping(bytes32 => bool) public incomingFulfillments;
+    bytes public currentResponseData;
 
     constructor(
         address _airnodeRrp,
+        address _airnodeAddress,
         address _sponsorWalletAddress
     ) RrpRequesterV0(_airnodeRrp) {
+        airnodeAddress = _airnodeAddress;
         sponsorWalletAddress = _sponsorWalletAddress;
     }
 
@@ -72,7 +64,7 @@ contract YearnAirnodeAllocator is RrpRequesterV0, Ownable {
             )
         );
         _callTheAirnode(
-            address(airnodeRrp),
+            address(airnodeAddress),
             0xb3134e38da62db0e5b377c1f6c181bb3631a3a9bb6559f78da800bb46892fbb4, // endpointId for /allocate endpoint on sturdy subnet validator API
             address(this),
             sponsorWalletAddress,
@@ -84,36 +76,42 @@ contract YearnAirnodeAllocator is RrpRequesterV0, Ownable {
     function fulfillAllocationRequest(
         bytes32 airnodeRequestId,
         bytes calldata data
-    ) external onlyAirnodeRrp {}
+    ) external onlyAirnodeRrp {
+        currentResponseData = abi.decode(data, (bytes));
+        incomingFulfillments[airnodeRequestId] = false;
+    }
 
-    function applyAllocation(
-        bytes32 allocationUid,
-        uint256 minerUid,
-        address debtAllocatorAddress,
-        address[] memory underlyingPools,
-        uint256[] memory allocationAmounts
-    ) public {
+    function applyAllocations(address debtAllocatorAddress) public {
+        SturdySubnetEncoder.DecodedResponseData
+            memory decodedResponse = SturdySubnetEncoder.decodeResponse(
+                currentResponseData
+            );
+
         IDebtAllocator debtAllocator = IDebtAllocator(debtAllocatorAddress);
+        // here we assume that the allocations and strategies are in the same corresponding order
         IVault vault = IVault(debtAllocator.vault());
         address[] memory strategies = vault.get_default_queue();
 
-        if (!(strategies.length == allocationAmounts.length)) {
+        if (!(strategies.length == decodedResponse.allocations.length)) {
             revert AllocationLogger.MismatchedArrays();
         }
 
         // update debt of vaults
         for (uint256 i = 0; i < strategies.length; i++) {
-            debtAllocator.update_debt(strategies[i], allocationAmounts[i]);
+            debtAllocator.update_debt(
+                strategies[i],
+                decodedResponse.allocations[i]
+            );
         }
 
         // Emit the event
         // AllocationLogger.logAllocation(allocationUid, minerUid, userAddress, strategies, allocationAmounts);
         emit AllocationLogger.AllocationEvent(
-            allocationUid,
-            minerUid,
+            decodedResponse.requestUUID,
+            decodedResponse.minerUID,
             address(vault),
-            underlyingPools,
-            allocationAmounts
+            decodedResponse.addresses,
+            decodedResponse.allocations
         );
     }
 }

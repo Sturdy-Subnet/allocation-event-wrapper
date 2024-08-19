@@ -3,17 +3,25 @@
 //
 // When running the script with `npx hardhat run <script>` you'll find the Hardhat
 // Runtime Environment's members available in the global scope.
+import { deriveSponsorWalletAddress } from "@api3/airnode-admin";
 import { ethers } from "hardhat";
 
 async function main() {
-  // const allocatorName: string = process.env.CONTRACT_NAME || ""
-
   const acct = (await ethers.getSigners())[0];
   const YearnAirnodeAllocator = await ethers.getContractFactory("YearnAirnodeAllocator");
-  const allocator = await YearnAirnodeAllocator.connect(acct).deploy("0xa0AD79D995DdeeB18a14eAef56A549A04e3Aa1Bd", "0x3ddA027949EB6fb77eeB78cd6E6D11C466f075d7", { maxFeePerGas: 125791680190 });
-  await allocator.deployed();
+  const txCount = await acct.getTransactionCount();
+  // the sponsor address IS the allocator's contract address;
+  const sponsorAddress: string = ethers.utils.getContractAddress({
+    from: acct.address,
+    nonce: txCount
+  })
+  console.log(`sponsorAddress: ${sponsorAddress}`);
 
-  console.log(`allocator deployed at:  ${allocator.address}`);
+  const sponsorWalletAddress = deriveSponsorWalletAddress(process.env.AIRNODE_XPUB || "", process.env.AIRNODE_ADDRESS || "", sponsorAddress);
+  console.log(`sponsorWalletAddress: ${sponsorWalletAddress}`);
+  const allocator = await YearnAirnodeAllocator.deploy(process.env.AIRNODE_RRP || "", "0x3ddA027949EB6fb77eeB78cd6E6D11C466f075d7", sponsorWalletAddress);
+  await allocator.deployed();
+  console.log(`allocator deployed at: ${allocator.address}`)
 }
 
 // We recommend this pattern to be able to use async/await everywhere

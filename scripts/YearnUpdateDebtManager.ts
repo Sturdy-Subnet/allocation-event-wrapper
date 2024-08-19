@@ -18,7 +18,7 @@ async function update() {
   if (network.chainId == 31337) {
     console.log("impersonating acct..")
     await ethers.provider.send("hardhat_impersonateAccount", [
-      process.env.YEARN_DEBT_MANAGER || "",
+      process.env.YEARN_DEBT_MANAGER,
     ]);
 
     await acct.sendTransaction({
@@ -27,7 +27,7 @@ async function update() {
       gasLimit: 300000,
     })
 
-    owner_acct = ethers.provider.getSigner(process.env.YEARN_DEBT_MANAGER || ""); // Here we impersonate the debt manager owner to set perms
+    owner_acct = ethers.provider.getSigner(process.env.YEARN_DEBT_MANAGER); // Here we impersonate the debt manager owner to set perms
   }
 
   const debtAllocator: IDebtAllocator = await ethers.getContractAt(
