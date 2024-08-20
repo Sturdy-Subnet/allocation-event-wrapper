@@ -10,7 +10,7 @@ import {SturdySubnetEncoder} from "./SturdySubnetEncoder.sol";
 
 contract YearnAirnodeAllocator is RrpRequesterV0, Ownable {
     using SturdySubnetEncoder for bytes;
-    
+
     address public airnodeAddress;
     address public sponsorWalletAddress;
     mapping(bytes32 => bool) public incomingFulfillments;
@@ -25,6 +25,11 @@ contract YearnAirnodeAllocator is RrpRequesterV0, Ownable {
         sponsorWalletAddress = _sponsorWalletAddress;
     }
 
+    // To receive funds from the sponsor wallet and send them to the owner.
+    receive() external payable {
+        payable(owner()).transfer(address(this).balance);
+    }
+
     function setSponsorWalletAddress(address sponsorWallet) public onlyOwner {
         sponsorWalletAddress = sponsorWallet;
     }
@@ -34,7 +39,7 @@ contract YearnAirnodeAllocator is RrpRequesterV0, Ownable {
         bytes32 endpointId,
         address sponsor,
         address sponsorWallet,
-        bytes memory parameters // Inbound API parameters which may already be ABI encoded
+        bytes memory parameters // Inbound API parameters which may already be ABI encoded`
     ) internal {
         /// Make the Airnode request
         bytes32 airnodeRequestId = airnodeRrp.makeFullRequest(
@@ -113,5 +118,12 @@ contract YearnAirnodeAllocator is RrpRequesterV0, Ownable {
             decodedResponse.addresses,
             decodedResponse.allocations
         );
+    }
+
+    function withdraw(
+        address airnode,
+        address sponsorWallet
+    ) external onlyOwner {
+        airnodeRrp.requestWithdrawal(airnode, sponsorWallet);
     }
 }
