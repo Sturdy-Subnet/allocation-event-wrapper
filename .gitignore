@@ -1,3 +1,13 @@
+# idea
+.idea
+
+# remix
+remix-compiler.config.js
+.states
+
+# mac
+*.DS_Store
+
 node_modules
 .env
 coverage
