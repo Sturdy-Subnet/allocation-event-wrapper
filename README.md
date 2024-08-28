@@ -33,11 +33,15 @@ npx hardhat test
 ```shell
 # deploy SturdyAllocator.sol
 CONTRACT_NAME=SturdyAllocator npx hardhat run scripts/DeployAllocator.ts --network mainnet
+# set manual allocator of debt manager
+npx hardhat run scripts/UpdateDebtManagerAllocator.ts --network mainnet
 # Perform allocations (rebalance selected vault every 24 hours):
 npx hardhat run scripts/RunSturdyAllocator.ts --network mainnet
 # set custom debt manager per script run (can be used to refer to different vaults)
+STURDY_DEBT_MANAGER="0x3f1...063" npx hardhat run scripts/UpdateDebtManagerAllocator.ts --network mainnet
 STURDY_DEBT_MANAGER="0x3f1...063" npx hardhat run scripts/RunSturdyAllocator.ts --network mainnet
 # example - rebalancing crvusd aggregator:
+STURDY_DEBT_MANAGER=0x3f1e01C07539b9E4941ab58b1258CBB6c4066063 npx hardhat run scripts/UpdateDebtManagerAllocator.ts --network mainnet
 STURDY_DEBT_MANAGER=0x3f1e01C07539b9E4941ab58b1258CBB6c4066063 npx hardhat run scripts/RunSturdyAllocator.ts --network mainnet
 ```
 

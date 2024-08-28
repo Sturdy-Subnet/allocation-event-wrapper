@@ -7,7 +7,7 @@ import { BigNumberish } from "ethers";
 // eslint-disable-next-line node/no-missing-import
 import { IDebtAllocator, IPool, IVault } from "../typechain";
 import {
-  Allocation,
+  MinerAllocation,
   Pools,
   RequestData,
   SturdySubnetResponse,
@@ -124,36 +124,52 @@ async function runAllocator() {
   };
 
   const allocs: SturdySubnetResponse = await sendAllocationRequest();
+  const poolAddresses: string[] = Object.keys(requestData.assets_and_pools.pools);
+
+  Array.from(Object.entries(allocs.allocations)).forEach(
+    entry => {
+      const allocations: { [key: string]: number } = entry[1].allocations;
+      Object.keys(requestData.assets_and_pools.pools).forEach(
+        function(allocContractAddr: string) {
+          if(!(poolAddresses.includes(allocContractAddr))){
+            console.log(`${allocContractAddr} not in ${poolAddresses}`)
+            entry[1].allocations[allocContractAddr] = 0.0;
+          }
+        }
+      )
+    }
+  )
+
   const requestUuid: string = allocs.request_uuid;
 
   console.log("allocations:", JSON.stringify(allocs));
   console.log("request uuid:", requestUuid);
 
-  const sortedAllocations: [BigNumberish, Allocation][] = Object.entries(
+  const sortedAllocations: [BigNumberish, MinerAllocation][] = Object.entries(
     allocs.allocations
   )
     .map(([uid, data]) => {
-      data.uid = uid;
-      const ret: [BigNumberish, Allocation] = [uid, data];
+      // data.uid = uid;
+      const ret: [BigNumberish, MinerAllocation] = [uid, data];
       return ret;
     })
     .sort(([uidA, a], [uidB, b]) => b.apy - a.apy); // Sort by APY in descending order
 
-    const poolUids: string[] = Object.keys(sortedAllocations[0][1].allocations)
-    const allocatedPools: string[] = poolUids.map((uid) => ethers.utils.getAddress(requestData.assets_and_pools.pools[uid].contract_address));
-    const allocationAmounts: BigNumberish[] = Object.values(
-      sortedAllocations[0][1].allocations
-    ).map((amount) =>
-      ethers.BigNumber.from(
-        Number(amount).toLocaleString("fullwide", { useGrouping: false })
-      )
-    );
-    const userAddress: string = requestData.user_address || "";
-    const minerUid = parseInt(sortedAllocations[0][1].uid);
-  
-    console.log("sorted allocation amounts: ", JSON.stringify(sortedAllocations, null, 2));
-    console.log("chosen allocation amounts: ", allocationAmounts);
-    console.log("silo addresses: ", allocatedPools);
+  const poolUids: string[] = Object.keys(sortedAllocations[0][1].allocations)
+  const allocatedPools: string[] = poolUids.map((uid) => ethers.utils.getAddress(requestData.assets_and_pools.pools[uid].contract_address));
+  const allocationAmounts: BigNumberish[] = Object.values(
+    sortedAllocations[0][1].allocations
+  ).map((amount) =>
+    ethers.BigNumber.from(
+      Number(amount).toLocaleString("fullwide", { useGrouping: false })
+    )
+  );
+  const userAddress: string = requestData.user_address || "";
+  const minerUid = sortedAllocations[0][0];
+
+  console.log("sorted allocation amounts: ", JSON.stringify(sortedAllocations, null, 2));
+  console.log("chosen allocation amounts: ", allocationAmounts);
+  console.log("silo addresses: ", allocatedPools);
 
   await run(
     acct,
