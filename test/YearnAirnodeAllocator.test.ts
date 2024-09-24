@@ -64,14 +64,6 @@ describe("YearnAirnodeAllocator", function () {
 
     let withdrawalRequestId: string = "";
 
-    // var withdrawalRequestId: string = "test";
-    // TODO: get withdrawal request ID from events
-    // airnodeRrp.on("RequestedWithdrawal", (_a, _b, requestId, _c) => {
-    //   console.log("requestId:");
-    //   console.log(requestId);
-    //   withdrawalRequestId = requestId;
-    // });
-
     const withdrawRequest = await allocator
       .connect(acct)
       .withdraw(process.env.AIRNODE_ADDRESS || "", sponsorWalletAddress) as any;
