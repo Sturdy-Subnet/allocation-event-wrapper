@@ -15,7 +15,7 @@ async function update() {
   const network = await ethers.provider.getNetwork()
 
   // NOTE: this may need to be changed i.e. if using a multi sig wallet
-  if (network.chainId == 31337) {
+  if (network.chainId == ethers.toBigInt(31337)) {
     console.log("impersonating acct..")
     await ethers.provider.send("hardhat_impersonateAccount", [
       process.env.YEARN_DEBT_MANAGER,
@@ -23,11 +23,11 @@ async function update() {
 
     await acct.sendTransaction({
       to: process.env.YEARN_DEBT_MANAGER,
-      value: ethers.utils.parseUnits('1', 'ether'),
+      value: ethers.parseUnits('1', 'ether'),
       gasLimit: 300000,
     })
 
-    owner_acct = ethers.provider.getSigner(process.env.YEARN_DEBT_MANAGER); // Here we impersonate the debt manager owner to set perms
+    owner_acct = await ethers.provider.getSigner(process.env.YEARN_DEBT_MANAGER); // Here we impersonate the debt manager owner to set perms
   }
 
   const debtAllocator: IDebtAllocator = await ethers.getContractAt(
@@ -44,6 +44,7 @@ async function update() {
   await debtAllocator.connect(owner_acct).setManager(process.env.YEARN_ALLOCATOR || "", true);
   // set keeper of the debt allocator to be the deployed allocation contract
   await debtAllocatorFactory.connect(owner_acct).setKeeper(process.env.YEARN_ALLOCATOR || "", true, {gasLimit: 300000});
+  console.log("done");
 
 }
 

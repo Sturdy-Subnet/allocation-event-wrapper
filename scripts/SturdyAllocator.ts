@@ -16,7 +16,7 @@ export async function run(
   debtManagerAddress: string,
   allocatedPools: string[],
   allocationAmounts: BigNumberish[],
-  overrides: Overrides
+  overrides:  Overrides & { from?: string | Promise<string> }
 ) {
   const allocator = await ethers.getContractAt(
     "SturdyAllocator",
@@ -26,10 +26,10 @@ export async function run(
   const allocateTx = await allocator
     .connect(acct)
     .allocate(
-      ethers.utils.toUtf8Bytes(allocationUid),
+      ethers.toUtf8Bytes(allocationUid),
       minerUid,
-      ethers.utils.getAddress(userAddress),
-      ethers.utils.getAddress(debtManagerAddress),
+      ethers.getAddress(userAddress),
+      ethers.getAddress(debtManagerAddress),
       allocatedPools,
       allocationAmounts,
       overrides

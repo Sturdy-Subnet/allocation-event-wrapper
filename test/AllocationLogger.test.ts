@@ -45,7 +45,7 @@ describe("AllocationLogger", function () {
     const acct = (await ethers.getSigners())[0];
     const MockAllocator = await ethers.getContractFactory("MockAllocator");
     const allocator = await MockAllocator.deploy();
-    await allocator.deployed();
+    await allocator.waitForDeployment();
 
     const allocatedPools: string[] = Object.values(
       allocationRequest.assets_and_pools.pools
@@ -56,9 +56,9 @@ describe("AllocationLogger", function () {
     const allocateTx = await allocator
       .connect(acct)
       .allocate(
-        ethers.utils.toUtf8Bytes("37fc2429b51e4a7785cb581b43beebba"),
+        ethers.toUtf8Bytes("37fc2429b51e4a7785cb581b43beebba"),
         69,
-        ethers.utils.getAddress(userAddress),
+        ethers.getAddress(userAddress),
         allocatedPools,
         allocationAmounts
       );
@@ -66,6 +66,6 @@ describe("AllocationLogger", function () {
     // wait until the transaction is mined
     expect(allocateTx)
       .to.emit(allocator, "AllocationEvent")
-      .withArgs(ethers.utils.toUtf8Bytes("37fc2429b51e4a7785cb581b43beebba"), 69, allocatedPools, allocationAmounts);
+      .withArgs(ethers.toUtf8Bytes("37fc2429b51e4a7785cb581b43beebba"), 69, allocatedPools, allocationAmounts);
   });
 });

@@ -9,9 +9,9 @@ import { ethers } from "hardhat";
 async function main() {
   const acct = (await ethers.getSigners())[0];
   const YearnAirnodeAllocator = await ethers.getContractFactory("YearnAirnodeAllocator");
-  const txCount = await acct.getTransactionCount();
+  const txCount = await acct.getNonce();
   // the sponsor address IS the allocator's contract address;
-  const sponsorAddress: string = ethers.utils.getContractAddress({
+  const sponsorAddress: string = ethers.getCreateAddress({
     from: acct.address,
     nonce: txCount
   })
@@ -20,8 +20,8 @@ async function main() {
   const sponsorWalletAddress = deriveSponsorWalletAddress(process.env.AIRNODE_XPUB || "", process.env.AIRNODE_ADDRESS || "", sponsorAddress);
   console.log(`sponsorWalletAddress: ${sponsorWalletAddress}`);
   const allocator = await YearnAirnodeAllocator.deploy(process.env.AIRNODE_RRP || "", "0x3ddA027949EB6fb77eeB78cd6E6D11C466f075d7", sponsorWalletAddress);
-  await allocator.deployed();
-  console.log(`allocator deployed at: ${allocator.address}`)
+  await allocator.waitForDeployment();
+  console.log(`allocator deployed at: ${await allocator.getAddress()}`)
 }
 
 // We recommend this pattern to be able to use async/await everywhere

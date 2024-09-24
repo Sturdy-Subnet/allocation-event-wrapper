@@ -6,6 +6,7 @@ import dotenv from "dotenv";
 import { BigNumberish } from "ethers";
 import { MinerAllocation, Pools, RequestData, SturdySubnetResponse } from "./AllocatorTypes";
 import { IVault } from "../typechain";
+import { DebtManager } from "../typechain-types";
 
 async function runAllocator() {
   console.log("attempting to rebalance vault...")
@@ -23,7 +24,7 @@ async function runAllocator() {
 
   // connect to aggregator
   const aggregatorAddress = await debtManager.connect(acct).vault();
-  const aggregator = await ethers.getContractAt("contracts/DebtManager.sol:IVault", aggregatorAddress);
+  const aggregator: IVault = await ethers.getContractAt("contracts/DebtManager.sol:IVault", aggregatorAddress) as unknown as IVault;
 
   // obtain parameters needed for sturdy subnet allocation request
   const totalAssets = await aggregator.connect(acct).totalAssets();
@@ -32,7 +33,7 @@ async function runAllocator() {
   const siloAddresses = await debtManager.connect(acct).getStrategies();
   const pools: Pools = await (async () => {
     const entries = await Promise.all(siloAddresses.map(async contractAddress => {
-      const silo: IVault = await ethers.getContractAt("contracts/interfaces/IVault.sol:IERC4626", contractAddress) as IVault;
+      // const silo: IVault = await ethers.getContractAt("contracts/interfaces/IVault.sol:IERC4626", contractAddress) as unknown as IVault;
       const entry = {
         "pool_model_disc": "CHAIN",
         "pool_type": 1,
@@ -48,7 +49,7 @@ async function runAllocator() {
     "request_type": "ORGANIC",
     "user_address": aggregatorAddress,
     "assets_and_pools": {
-      "total_assets": totalAssets.toLocaleString(),
+      "total_assets": totalAssets.toString(),
       "pools": pools
     }
   };
@@ -106,11 +107,11 @@ async function runAllocator() {
     .sort(([uidA, a], [uidB, b]) => b.apy - a.apy); // Sort by APY in descending order
 
   const poolUids: string[] = Object.keys(sortedAllocations[0][1].allocations)
-  const allocatedPools: string[] = poolUids.map((uid) => ethers.utils.getAddress(requestData.assets_and_pools.pools[uid].contract_address));
+  const allocatedPools: string[] = poolUids.map((uid) => ethers.getAddress(requestData.assets_and_pools.pools[uid].contract_address));
   const allocationAmounts: BigNumberish[] = Object.values(
     sortedAllocations[0][1].allocations
   ).map((amount) =>
-    ethers.BigNumber.from(
+    ethers.toBigInt(
       Number(amount).toLocaleString("fullwide", { useGrouping: false })
     )
   );

@@ -1,8 +1,9 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
 import { deriveSponsorWalletAddress } from "@api3/airnode-admin";
-import { IAirnodeRrpV0, YearnAirnodeAllocator} from "../typechain";
+import { IAirnodeRrpV0, IDebtAllocator, IDebtAllocatorFactory, IVault, YearnAirnodeAllocator } from "../typechain";
 import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
+import { impersonateAccount } from "@nomicfoundation/hardhat-network-helpers";
 // import { BytesLike } from "ethers";
 
 describe("YearnAirnodeAllocator", function () {
@@ -74,7 +75,7 @@ describe("YearnAirnodeAllocator", function () {
     const withdrawRequest = await allocator
       .connect(acct)
       .withdraw(process.env.AIRNODE_ADDRESS || "", sponsorWalletAddress) as any;
-    
+
     await withdrawRequest.wait();
     await ethers.provider.send("evm_mine", []);
 
@@ -92,9 +93,7 @@ describe("YearnAirnodeAllocator", function () {
       console.log("Event not emitted");
     }
 
-    await ethers.provider.send("hardhat_impersonateAccount", [
-      sponsorWalletAddress,
-    ]);
+    await impersonateAccount(sponsorWalletAddress);
     const sponsorWallet = await ethers.provider.getSigner(sponsorWalletAddress);
 
     console.log(`withdrawalRequestId: ${withdrawalRequestId}`);
@@ -119,7 +118,7 @@ describe("YearnAirnodeAllocator", function () {
     const allocateTx = await allocator
       .connect(acct)
       .requestAllocation(
-        "4070000000000000000000000",
+        "4732267826468720928467714",
         "0x028ec7330ff87667b6dfb0d94b954c820195336c",
         [
           {
@@ -142,22 +141,20 @@ describe("YearnAirnodeAllocator", function () {
 
   it("should fulfill allocation request", async function () {
     let fulfillRequestId: string = "";
-
-    // Attach listener before transaction is sent
-    airnodeRrp.once("MadeFullRequest", (_a: any, requestId: string, ..._args: any[]) => {
-        console.log("Event caught: requestId =", requestId);
-        // fulfillRequestId = requestId;
-    });
+    const allocatorAddress = await allocator.getAddress();
 
     // Impersonate sponsor wallet to fulfill request
-    await ethers.provider.send("hardhat_impersonateAccount", [
-      sponsorWalletAddress,
-    ]);
-
-    const sponsorWallet = await ethers.provider.getSigner(sponsorWalletAddress);
+    const airnodeRrpAddress = await airnodeRrp.getAddress();
+    await impersonateAccount(airnodeRrpAddress);
+    const airnodeRrpWallet = await ethers.provider.getSigner(airnodeRrpAddress);
 
     await ethers.provider.send("hardhat_setBalance", [
       sponsorWalletAddress,
+      ethers.toBeHex(ethers.parseUnits("10", "ether")),  // Convert 10 ETH to hex format
+    ]);
+
+    await ethers.provider.send("hardhat_setBalance", [
+      airnodeRrpAddress,
       ethers.toBeHex(ethers.parseUnits("10", "ether")),  // Convert 10 ETH to hex format
     ]);
 
@@ -194,24 +191,64 @@ describe("YearnAirnodeAllocator", function () {
     const events = await airnodeRrp.queryFilter(filter, allocateTx.blockNumber);
     if (events.length > 0) {
       const requestId = events[0].args[1];
-      console.log("requestId:", requestId);
       fulfillRequestId = requestId;
+      console.log("fulfillRequestId:", fulfillRequestId);
     } else {
       console.log("Event not emitted");
     }
 
-    // Emulate Airnode fulfilling the request
-    // NOTE: can't do this without private key - so it's a no go
-    // const selector = ethers.id("fulfillAllocationRequest(bytes32,bytes)");
-    // const fulfillData = ethers.ZeroHash;
-    // const signature = await ethers.provider.send("eth_sign", [
-    //   sponsorWalletAddress,
-    //   ethers.solidityPacked(["bytes32", "bytes"], [fulfillRequestId, fulfillData]),
-    // ]);
+    // Impersonate admin of debt allocator
+    await impersonateAccount(process.env.YEARN_DEBT_MANAGER || "");
 
-    // await airnodeRrp.connect(sponsorWallet).fulfill(fulfillRequestId, await airnodeRrp.getAddress(), await allocator.getAddress(), selector, fulfillData, signature);
-    // await expect(allocateTx).to.emit(airnodeRrp, "FulfilledRequest");
-  });
+    await ethers.provider.send("hardhat_setBalance", [
+      process.env.YEARN_DEBT_MANAGER,
+      ethers.toBeHex(ethers.parseUnits("10", "ether")),  // Convert 10 ETH to hex format
+    ]);
+
+    const owner_acct = await ethers.provider.getSigner(process.env.YEARN_DEBT_MANAGER); // Here we impersonate the debt manager owner to set perms
+
+    // Set allocator as keeper
+    const debtAllocator: IDebtAllocator = await ethers.getContractAt(
+      "IDebtAllocator",
+      process.env.YEARN_DEBT_ALLOCATOR || ""
+    ) as IDebtAllocator;
+
+    const debtAllocatorFactory: IDebtAllocatorFactory = await ethers.getContractAt(
+      "IDebtAllocatorFactory",
+      process.env.YEARN_DEBT_ALLOCATOR_FACTORY || ""
+    ) as IDebtAllocatorFactory;
+
+    // set manager of the debt allocator to be the deployed allocation contract
+    await debtAllocator.connect(owner_acct).setManager(allocatorAddress, true);
+    // set keeper of the debt allocator to be the deployed allocation contract
+    await debtAllocatorFactory.connect(owner_acct).setKeeper(allocatorAddress, true, { gasLimit: 300000 });
+
+    // Emulate Airnode fulfilling the request
+    // encoded allocations returned from the airnode, from Sturdy Subnet
+    const encodedAllocations = "0x000000000000000000000000000000000000000000000000000000000000002000000000000000000000000000000000000000000000000000000000000001803634343664393236643138383439643039616137393930643030633931666463000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000300000000000000000000000083f20f44975d03b1b09e64809b757c47f942beea000000000000000000000000018008bfb33d285247a21d44e50697654f754e630000000000000000000000004dedf26112b3ec8ec46e7e31ea5e123490b05b8b000000000000000000000000000000000000000000000000000000000000000300000000000000000000000000000000000000000002097f5e748558e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001cb6c5f82707f30000000";
+    const allocationsBytes = "0x3634343664393236643138383439643039616137393930643030633931666463000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000800000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000300000000000000000000000083f20f44975d03b1b09e64809b757c47f942beea000000000000000000000000018008bfb33d285247a21d44e50697654f754e630000000000000000000000004dedf26112b3ec8ec46e7e31ea5e123490b05b8b000000000000000000000000000000000000000000000000000000000000000300000000000000000000000000000000000000000002097f5e748558e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001cb6c5f82707f30000000"
+    await allocator.connect(airnodeRrpWallet).fulfillAllocationRequest(fulfillRequestId, encodedAllocations);
+    const currentResponse = await allocator.currentResponseData();
+    expect(currentResponse).to.equal(allocationsBytes);
+
+    // apply allocations through the yearn dai vaults' debt manager
+    await allocator.connect(acct).applyAllocations("0xc46D9286Cf830cC2e602e6D5F005455dF9961b4A");
+
+    // check new vault debts
+    const vaultAddr = await debtAllocator.vault();
+    const vault: IVault = await ethers.getContractAt("contracts/interfaces/IVault.sol:IVault", vaultAddr) as unknown as IVault;
+    const strats = await vault.get_default_queue();
+
+    const expectedDebts = ["2462702480283999894765568", "0", "417002194480939035214661"]
+    const currentDebts = [];
+    for (const strat of strats) {
+      const params = await vault.strategies(strat);
+      currentDebts.push(params.current_debt.toString());
+    }
+
+    expect(currentDebts).to.eql(expectedDebts);
+
+  }).timeout(120000);
 
 
   // it("should perform allocations")
