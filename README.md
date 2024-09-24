@@ -56,7 +56,7 @@ npx hardhat run scripts/YearnUpdateDebtManager.ts --network mainnet
 # works for Yearn's dai vault. NOTE: this script does not 
 # fulfill the request. This needs to be done manually by
 # calling applyAllocation() in the allocator contract
-npx hardhat run scripts/RunYearnAirnodeAllocator.ts --network local
+npx hardhat run scripts/RunYearnAirnodeAllocator.ts --network mainnet
 ```
 
 ## Yearn Direct API Call (Example - works on Dai Vault) - Deployment and Usage

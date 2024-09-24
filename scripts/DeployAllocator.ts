@@ -11,9 +11,9 @@ async function main() {
   const acct = (await ethers.getSigners())[0];
   const SturdyAllocator = await ethers.getContractFactory(allocatorName);
   const allocator = await SturdyAllocator.connect(acct).deploy();
-  await allocator.deployed();
+  await allocator.waitForDeployment();
 
-  console.log(`allocator deployed at:  ${allocator.address}`);
+  console.log(`allocator deployed at:  ${await allocator.getAddress()}`);
 }
 
 // We recommend this pattern to be able to use async/await everywhere

@@ -40,7 +40,7 @@ async function runAllocator() {
   const vault: IVault = (await ethers.getContractAt(
     "contracts/DebtManager.sol:IVault",
     vaultAddress
-  )) as IVault;
+  )) as unknown as IVault;
   // obtain parameters needed for sturdy subnet allocation request
   const totalAssets = await vault.connect(acct).totalAssets();
   // obtain the different silos the vault is responsible for
@@ -52,8 +52,7 @@ async function runAllocator() {
         const strategy: IVault = (await ethers.getContractAt(
           "contracts/interfaces/IVault.sol:IERC4626",
           contractAddress
-        )) as IVault;
-        const pool_name = await strategy.connect(acct).name();
+        )) as unknown as IVault;
         // Assumes by default that the underlying pool being allocated to is an aave contract
         const poolType: string =
           underlyingTypesMap.get(contractAddress) || "AAVE";
@@ -82,11 +81,10 @@ async function runAllocator() {
         const entry = {
           pool_model_disc: "CHAIN",
           pool_type: poolType,
-          pool_id: pool_name,
           contract_address: tokenAddress,
         };
         
-        return [pool_name, entry];
+        return [ethers.getAddress(contractAddress), entry];
       })
     );
     return Object.fromEntries(entries);
@@ -97,7 +95,7 @@ async function runAllocator() {
     request_type: "ORGANIC",
     user_address: vaultAddress,
     assets_and_pools: {
-      total_assets: totalAssets.toLocaleString(),
+      total_assets: BigInt(totalAssets).toString(),
       pools: pools,
     },
   };
@@ -156,11 +154,11 @@ async function runAllocator() {
     .sort(([uidA, a], [uidB, b]) => b.apy - a.apy); // Sort by APY in descending order
 
   const poolUids: string[] = Object.keys(sortedAllocations[0][1].allocations)
-  const allocatedPools: string[] = poolUids.map((uid) => ethers.utils.getAddress(requestData.assets_and_pools.pools[uid].contract_address));
+  const allocatedPools: string[] = poolUids.map((uid) => ethers.getAddress(requestData.assets_and_pools.pools[uid].contract_address));
   const allocationAmounts: BigNumberish[] = Object.values(
     sortedAllocations[0][1].allocations
   ).map((amount) =>
-    ethers.BigNumber.from(
+    ethers.toBigInt(
       Number(amount).toLocaleString("fullwide", { useGrouping: false })
     )
   );
@@ -175,7 +173,7 @@ async function runAllocator() {
     acct,
     requestUuid,
     minerUid,
-    debtAllocator.address,
+    await debtAllocator.getAddress(),
     allocatedPools,
     allocationAmounts,
     { gasLimit: 3000000 }

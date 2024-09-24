@@ -1,11 +1,13 @@
 import * as dotenv from "dotenv";
 
 import { HardhatUserConfig, task } from "hardhat/config";
-import "@nomiclabs/hardhat-etherscan";
-import "@nomiclabs/hardhat-waffle";
-import "@typechain/hardhat";
+// import "@nomiclabs/hardhat-waffle";
+import "@nomicfoundation/hardhat-toolbox";
+// import "@typechain/hardhat";
+import "@nomicfoundation/hardhat-ethers";
+import "@nomicfoundation/hardhat-chai-matchers";
 import "hardhat-gas-reporter";
-import "solidity-coverage";
+// import "solidity-coverage";
 import "hardhat-tracer";
 
 dotenv.config();
@@ -40,6 +42,7 @@ const config: HardhatUserConfig = {
         url: process.env.MAINNET_URL || "",
         // blockNumber: 19021523,
         blockNumber: 20359700,
+        // blockNumber: 20817480,
       },
       initialBaseFeePerGas: 109851462,
       accounts: [
