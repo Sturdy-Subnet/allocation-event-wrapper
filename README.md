@@ -1,6 +1,6 @@
-# Allocation event wrapper
+# Sturdy Subnet - Allocation Event Wrappers
 
-This repository houses a wrapper which can used to execute rebalances across pools based on Sturdy Subnet's provided allocations, and subsequently log this action to be queried later and displayed on our dashboard. Here's what the event looks like:
+This repository houses wrapper(s) which can be used to execute rebalances across pools based on Sturdy Subnet's provided allocations, and subsequently log this action to be queried later and displayed on our dashboard. Here's what the event looks like:
 
 ```solidity
 event AllocationEvent(

@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
 import { deriveSponsorWalletAddress } from "@api3/airnode-admin";
-import { IAirnodeRrpV0, IDebtAllocator, IDebtAllocatorFactory, IVault, YearnAirnodeAllocator } from "../typechain";
+import { IAirnodeRrpV0, IDebtAllocator, IDebtAllocatorFactory, IVault, YearnAirnodeAllocator } from "../typechain-types";
 import { HardhatEthersSigner } from "@nomicfoundation/hardhat-ethers/signers";
 import { impersonateAccount } from "@nomicfoundation/hardhat-network-helpers";
 // import { BytesLike } from "ethers";

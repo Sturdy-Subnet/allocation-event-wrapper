@@ -5,8 +5,7 @@ import axios, { all } from "axios";
 import dotenv from "dotenv";
 import { BigNumberish } from "ethers";
 import { MinerAllocation, Pools, RequestData, SturdySubnetResponse } from "./AllocatorTypes";
-import { IVault } from "../typechain";
-import { DebtManager } from "../typechain-types";
+import { IVault } from "../typechain-types";
 
 async function runAllocator() {
   console.log("attempting to rebalance vault...")
@@ -35,7 +34,6 @@ async function runAllocator() {
     const entries = await Promise.all(siloAddresses.map(async contractAddress => {
       // const silo: IVault = await ethers.getContractAt("contracts/interfaces/IVault.sol:IERC4626", contractAddress) as unknown as IVault;
       const entry = {
-        "pool_model_disc": "CHAIN",
         "pool_type": 1,
         "contract_address": contractAddress,
       };
@@ -104,7 +102,7 @@ async function runAllocator() {
       const ret: [BigNumberish, MinerAllocation] = [uid, data];
       return ret;
     })
-    .sort(([uidA, a], [uidB, b]) => b.apy - a.apy); // Sort by APY in descending order
+    .sort(([uidA, a], [uidB, b]) => a.rank - b.rank); // Sort by rank in ascending order
 
   const poolUids: string[] = Object.keys(sortedAllocations[0][1].allocations)
   const allocatedPools: string[] = poolUids.map((uid) => ethers.getAddress(requestData.assets_and_pools.pools[uid].contract_address));

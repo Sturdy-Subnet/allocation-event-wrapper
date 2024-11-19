@@ -5,7 +5,7 @@ import axios from "axios";
 import dotenv from "dotenv";
 import { BigNumberish } from "ethers";
 // eslint-disable-next-line node/no-missing-import
-import { IDebtAllocator, IPool, IVault } from "../typechain";
+import { IDebtAllocator, IPool, IVault } from "../typechain-types";
 import {
   MinerAllocation,
   Pools,
@@ -79,7 +79,6 @@ async function runAllocator() {
         }
 
         const entry = {
-          pool_model_disc: "CHAIN",
           pool_type: poolType,
           contract_address: tokenAddress,
         };
@@ -151,7 +150,7 @@ async function runAllocator() {
       const ret: [BigNumberish, MinerAllocation] = [uid, data];
       return ret;
     })
-    .sort(([uidA, a], [uidB, b]) => b.apy - a.apy); // Sort by APY in descending order
+    .sort(([uidA, a], [uidB, b]) => a.rank - b.rank); // Sort by rank in ascending order
 
   const poolUids: string[] = Object.keys(sortedAllocations[0][1].allocations)
   const allocatedPools: string[] = poolUids.map((uid) => ethers.getAddress(requestData.assets_and_pools.pools[uid].contract_address));

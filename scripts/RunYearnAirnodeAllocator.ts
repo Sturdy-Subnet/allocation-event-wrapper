@@ -2,7 +2,7 @@
 import { ethers } from "hardhat";
 import dotenv from "dotenv";
 import { Signer } from "ethers";
-import { YearnAirnodeAllocator } from "../typechain";
+import { YearnAirnodeAllocator } from "../typechain-types";
 
 async function update() {
   const acct = (await ethers.getSigners())[0] as Signer

@@ -3,7 +3,7 @@ import { BigNumberish } from "ethers";
 
 export interface MinerAllocation extends Object {
   uid: number;
-  apy: number;
+  rank: number;
   allocations: { [key: string]: number }; // Assuming the allocations object is a dictionary with number values
 }
 
@@ -16,7 +16,6 @@ export interface SturdySubnetResponse extends Object {
 }
 
 export interface PoolEntry extends Object {
-  pool_model_disc: string;
   pool_type: string;
   contract_address: string;
 }
@@ -28,6 +27,7 @@ export interface Pools {
 export interface RequestData extends Object {
   request_type: string;
   user_address?: string;
+  num_allocs?: number;
   assets_and_pools: {
     total_assets: BigNumberish;
     pools: Pools;

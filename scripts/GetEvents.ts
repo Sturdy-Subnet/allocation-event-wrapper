@@ -1,5 +1,5 @@
 import { ethers } from "hardhat";
-import { IAirnodeRrpV0 } from "../typechain";
+import { IAirnodeRrpV0 } from "../typechain-types";
 
 async function main() {
   const allocator = await ethers.getContractAt(

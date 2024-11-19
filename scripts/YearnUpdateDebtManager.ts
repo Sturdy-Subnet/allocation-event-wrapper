@@ -2,7 +2,7 @@
 import { ethers } from "hardhat";
 import dotenv from "dotenv";
 import { Signer } from "ethers";
-import { IDebtAllocator, IDebtAllocatorFactory } from "../typechain";
+import { IDebtAllocator, IDebtAllocatorFactory } from "../typechain-types";
 
 
 // NOTE: this may need to be changed i.e. if using a multi sig wallet

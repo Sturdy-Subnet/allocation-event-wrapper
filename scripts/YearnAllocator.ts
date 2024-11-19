@@ -6,7 +6,7 @@
 import { ethers } from "hardhat";
 import { BigNumberish, Overrides, Signer } from "ethers";
 import dotenv from "dotenv";
-import { YearnAllocator } from "../typechain";
+import { YearnAllocator } from "../typechain-types";
 dotenv.config();
 
 export async function run(
