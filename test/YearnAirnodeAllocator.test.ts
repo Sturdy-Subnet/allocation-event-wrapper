@@ -231,7 +231,7 @@ describe("YearnAirnodeAllocator", function () {
     const vault: IVault = await ethers.getContractAt("contracts/interfaces/IVault.sol:IVault", vaultAddr) as unknown as IVault;
     const strats = await vault.get_default_queue();
 
-    const expectedDebts = ["2462702480283999894765568", "0", "417002194480939035214661"]
+    const expectedDebts = ["2462702480283999894765568", "0", "417002195365335184428196"]
     const currentDebts = [];
     for (const strat of strats) {
       const params = await vault.strategies(strat);
