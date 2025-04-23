@@ -11,6 +11,7 @@ async function runAllocator() {
   console.log("attempting to rebalance vault...")
   dotenv.config();
 
+  const numAllocs = Number(process.env.NUM_ALLOCS) || 1; // number of allocations to be returned
   const apiKey = process.env.STURDY_VALI_API_KEY || ""; // Validator API Key
   const url = process.env.HOST_URL || ""; // endpoint url containing validator domain and endpoint for allocations (usually /allocate)
 
@@ -34,8 +35,10 @@ async function runAllocator() {
     const entries = await Promise.all(siloAddresses.map(async contractAddress => {
       // const silo: IVault = await ethers.getContractAt("contracts/interfaces/IVault.sol:IERC4626", contractAddress) as unknown as IVault;
       const entry = {
-        "pool_type": 1,
-        "contract_address": contractAddress,
+        pool_model_disc: "EVM_CHAIN_BASED",
+        pool_type: "STURDY_SILO",
+        contract_address: contractAddress,
+        pool_data_provider_type: "ETHEREUM_MAINNET",
       };
       return [contractAddress, entry];
     }));
@@ -44,11 +47,13 @@ async function runAllocator() {
 
   // this request will be sent to the sturdy subnet validator API
   const requestData: RequestData = {
-    "request_type": "ORGANIC",
-    "user_address": aggregatorAddress,
-    "assets_and_pools": {
-      "total_assets": totalAssets.toString(),
-      "pools": pools
+    num_allocs: numAllocs,
+    request_type: "ORGANIC",
+    user_address: aggregatorAddress,
+    pool_data_provider_type: "ETHEREUM_MAINNET",
+    assets_and_pools: {
+      total_assets: totalAssets.toString(),
+      pools: pools
     }
   };
 
@@ -120,16 +125,16 @@ async function runAllocator() {
   console.log("chosen allocation amounts: ", allocationAmounts);
   console.log("silo addresses: ", allocatedPools);
 
-  await run(
-    acct,
-    requestUuid,
-    minerUid,
-    userAddress,
-    process.env.STURDY_DEBT_MANAGER || "",
-    allocatedPools,
-    allocationAmounts,
-    { gasLimit: 3000000 }
-  );
+  // await run(
+  //   acct,
+  //   requestUuid,
+  //   minerUid,
+  //   userAddress,
+  //   process.env.STURDY_DEBT_MANAGER || "",
+  //   allocatedPools,
+  //   allocationAmounts,
+  //   { gasLimit: 3000000 }
+  // );
 }
 
 async function main() {
