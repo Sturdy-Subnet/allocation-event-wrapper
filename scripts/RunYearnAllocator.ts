@@ -26,6 +26,7 @@ async function runAllocator() {
   console.log("attempting to rebalance vault...");
   dotenv.config();
 
+  const numAllocs = Number(process.env.NUM_ALLOCS) || 1; // number of allocations to be returned
   const apiKey = process.env.STURDY_VALI_API_KEY || ""; // Validator API Key
   const url = process.env.HOST_URL || ""; // endpoint url containing validator domain and endpoint for allocations (usually /allocate)
 
@@ -63,9 +64,11 @@ async function runAllocator() {
             contractAddress
           );
           // obtain pool address
+          console.log("obtaining pool address...");
           const poolAddress = await strategyContract
             .connect(acct)
             .lendingPool();
+          console.log("pool address: ", poolAddress);
           const poolContract: IPool = (await ethers.getContractAt(
             "IPool",
             poolAddress
@@ -78,21 +81,27 @@ async function runAllocator() {
           tokenAddress = reserveData.aTokenAddress;
         }
 
+        console.log("creating pool entry for: ", tokenAddress);
         const entry = {
+          pool_model_disc: "EVM_CHAIN_BASED",
           pool_type: poolType,
           contract_address: tokenAddress,
+          pool_data_provider_type: "ETHEREUM_MAINNET",
         };
-        
+
         return [ethers.getAddress(contractAddress), entry];
       })
     );
+    console.log("entries: ", entries);
     return Object.fromEntries(entries);
   })();
 
   // this request will be sent to the sturdy subnet validator API
   const requestData: RequestData = {
+    num_allocs: numAllocs,
     request_type: "ORGANIC",
     user_address: vaultAddress,
+    pool_data_provider_type: "ETHEREUM_MAINNET",
     assets_and_pools: {
       total_assets: BigInt(totalAssets).toString(),
       pools: pools,
@@ -101,7 +110,7 @@ async function runAllocator() {
 
   console.log(`sending data`);
   console.log(JSON.stringify(requestData, null, 2))
-  
+
   const config = {
     headers: {
       "Content-Type": "application/json",
@@ -127,8 +136,8 @@ async function runAllocator() {
     entry => {
       const allocations: { [key: string]: number } = entry[1].allocations;
       Object.keys(requestData.assets_and_pools.pools).forEach(
-        function(allocContractAddr: string) {
-          if(!(poolAddresses.includes(allocContractAddr))){
+        function (allocContractAddr: string) {
+          if (!(poolAddresses.includes(allocContractAddr))) {
             console.log(`${allocContractAddr} not in ${poolAddresses}`)
             entry[1].allocations[allocContractAddr] = 0.0;
           }
@@ -168,15 +177,15 @@ async function runAllocator() {
   console.log("chosen allocation amounts: ", allocationAmounts);
   console.log("silo addresses: ", allocatedPools);
 
-  await run(
-    acct,
-    requestUuid,
-    minerUid,
-    await debtAllocator.getAddress(),
-    allocatedPools,
-    allocationAmounts,
-    { gasLimit: 3000000 }
-  );
+  // await run(
+  //   acct,
+  //   requestUuid,
+  //   minerUid,
+  //   await debtAllocator.getAddress(),
+  //   allocatedPools,
+  //   allocationAmounts,
+  //   { gasLimit: 3000000 }
+  // );
 }
 
 async function main() {

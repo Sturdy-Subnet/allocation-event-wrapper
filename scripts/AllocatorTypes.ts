@@ -16,8 +16,10 @@ export interface SturdySubnetResponse extends Object {
 }
 
 export interface PoolEntry extends Object {
+  pool_model_disc: string
   pool_type: string;
   contract_address: string;
+  pool_data_provider_type: string;
 }
 
 export interface Pools {
@@ -28,6 +30,7 @@ export interface RequestData extends Object {
   request_type: string;
   user_address?: string;
   num_allocs?: number;
+  pool_data_provider_type?: string;
   assets_and_pools: {
     total_assets: BigNumberish;
     pools: Pools;
